@@ -25,4 +25,4 @@ const Double_t tl_mass = 000; // Kg
 
 const Double_t se_0n_half_lifetime = 6e24*year; // seconds
 
-const Double_t exposure = 2.5*year; // seconds
+const Double_t full_exposure = 2.5*year; // seconds
