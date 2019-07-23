@@ -12,8 +12,14 @@ Paolo Franchini (Imperial College London) - p.franchini@imperial.ac.uk
 
 ## Usage:
 
-'''
-edit sensitivity.cpp
+Edit sensitivity.cpp:
+* MC files
+* define selections
+* define number of pseudo experiment
+* define range of the exposure studies
+
+```
 make
 ./sensitivity
-'''
+```
+
