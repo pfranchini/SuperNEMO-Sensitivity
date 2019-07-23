@@ -16,13 +16,15 @@
 #include "TRandom3.h"
 #include "TError.h"
 #include "TLegend.h"
+#include "TString.h"
 #include <iostream>
 
 #include "constants.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
-Bool_t do_plot = false;  // Creates example plots for one exposure
-Int_t N_experiments = 10000; // Number of pseudo experiments for each exposure
+Bool_t do_plot = true;          // Creates example plots for one exposure
+Int_t N_experiments = 1000;    // Number of pseudo experiments for each exposure
+TString selection = "SOURCE";  // Selection: [SOURCE, TRACKER]
 //////////////////////////////////////////////////////////////////////////////////////////
 
 Double_t N_source_bulk, N_source_surface, N_tracker_surface, N_total;
@@ -72,11 +74,11 @@ Double_t fitfunc(Double_t *x, Double_t *par){
   Double_t source_surface = h_bi214_source_surface_length_alpha->GetBinContent(bin2);
   Double_t tracker_surface = h_bi214_tracker_surface_length_alpha->GetBinContent(bin3);
   
-  Double_t rs = par[0]/h_bi214_source_bulk_length_alpha->Integral()*source_bulk+ \
+  Double_t total = par[0]/h_bi214_source_bulk_length_alpha->Integral()*source_bulk+ \
     par[1]/h_bi214_source_surface_length_alpha->Integral()*source_surface+ \
     par[2]/h_bi214_tracker_surface_length_alpha->Integral()*tracker_surface;
 
-  return rs;
+  return total;
 
 }
 
@@ -88,22 +90,21 @@ void do_fit(Int_t N1, Int_t N2, Int_t N3){
   Double_t N_source_bulk_rand = rand1->TRandom3::Poisson(N_source_bulk);
   Double_t N_source_surface_rand = rand2->TRandom3::Poisson(N_source_surface);
   Double_t N_tracker_surface_rand = rand3->TRandom3::Poisson(N_tracker_surface);
-
   //std::cout << "Experiment randomized event number: " << N_source_bulk_rand+N_source_surface_rand+N_tracker_surface_rand << std::endl;
   
   // Create new pseudo-experiment histogram:
   for ( Int_t bin = 0; bin < h_bi214_length_alpha->GetNbinsX(); bin++ )
     //    h_bi214_length_alpha_exp->SetBinContent(bin,h_bi214_length_alpha->GetBinContent(bin)/N_total*N);
-    h_bi214_length_alpha_exp->SetBinContent(bin, \
+    h_bi214_length_alpha_exp->SetBinContent(bin,			\
 					    h_bi214_source_bulk_length_alpha->GetBinContent(bin)/N_source_bulk*N_source_bulk_rand + \
 					    h_bi214_source_surface_length_alpha->GetBinContent(bin)/N_source_surface*N_source_surface_rand + \
 					    h_bi214_tracker_surface_length_alpha->GetBinContent(bin)/N_tracker_surface*N_tracker_surface_rand );
   //std::cout << "Experiment event number: " << h_bi214_length_alpha_exp->Integral() << std::endl;
-
+  
   // Fit:
   func->SetParameters(N_source_bulk,N_source_surface,N_tracker_surface);
-  h_bi214_length_alpha_exp->Fit("func","q"); // quite option
-
+  h_bi214_length_alpha_exp->Fit("func","q"); // "q" quite option
+  
 }
 
 // Full pseudo-experiment for one single exposure [days]
@@ -128,33 +129,31 @@ void do_exposure(Int_t days){
     std::cout << "Events source surface: " << N_source_surface << std::endl;
     std::cout << "Events tracker surface: " << N_tracker_surface << std::endl;
     std::cout << "  Total number of events: " << N_total << std::endl << std::endl;
-  }
-
-  h_bi214_source_bulk_length_alpha->Scale(N_source_bulk/h_bi214_source_bulk_length_alpha->Integral());
-  h_bi214_source_surface_length_alpha->Scale(N_source_surface/h_bi214_source_surface_length_alpha->Integral());
-  h_bi214_tracker_surface_length_alpha->Scale(N_tracker_surface/h_bi214_tracker_surface_length_alpha->Integral());
-
-  h_bi214_source_bulk_length_alpha->SetLineColor(kRed);
-  h_bi214_source_surface_length_alpha->SetLineColor(kGreen+3);
-  h_bi214_tracker_surface_length_alpha->SetLineColor(kBlue);
-
-  h_bi214_source_bulk_length_alpha->SetFillStyle(3003);
-  h_bi214_source_surface_length_alpha->SetFillStyle(3003);
-  h_bi214_tracker_surface_length_alpha->SetFillStyle(3003);
-  h_bi214_source_bulk_length_alpha->SetFillColorAlpha(kRed,.60);
-  h_bi214_source_surface_length_alpha->SetFillColorAlpha(kGreen+3,.60);
-  h_bi214_tracker_surface_length_alpha->SetFillColorAlpha(kBlue,.60);
-
-  h_bi214_length_alpha->Reset();
-  h_bi214_length_alpha->Add(h_bi214_source_bulk_length_alpha);
-  h_bi214_length_alpha->Add(h_bi214_source_surface_length_alpha);
-  h_bi214_length_alpha->Add(h_bi214_tracker_surface_length_alpha);
-
-  h_bi214_length_alpha->GetXaxis()->SetTitle("alpha length [mm]");
-  h_bi214_length_alpha->GetYaxis()->SetTitle("Events/bin");
-  h_bi214_length_alpha->SetLineColor(kBlack);
-
-  if (do_plot){
+    
+    h_bi214_source_bulk_length_alpha->Scale(N_source_bulk/h_bi214_source_bulk_length_alpha->Integral());
+    h_bi214_source_surface_length_alpha->Scale(N_source_surface/h_bi214_source_surface_length_alpha->Integral());
+    h_bi214_tracker_surface_length_alpha->Scale(N_tracker_surface/h_bi214_tracker_surface_length_alpha->Integral());
+    
+    h_bi214_source_bulk_length_alpha->SetLineColor(kRed);
+    h_bi214_source_surface_length_alpha->SetLineColor(kGreen+3);
+    h_bi214_tracker_surface_length_alpha->SetLineColor(kBlue);
+    
+    h_bi214_source_bulk_length_alpha->SetFillStyle(3003);
+    h_bi214_source_surface_length_alpha->SetFillStyle(3003);
+    h_bi214_tracker_surface_length_alpha->SetFillStyle(3003);
+    h_bi214_source_bulk_length_alpha->SetFillColorAlpha(kRed,.60);
+    h_bi214_source_surface_length_alpha->SetFillColorAlpha(kGreen+3,.60);
+    h_bi214_tracker_surface_length_alpha->SetFillColorAlpha(kBlue,.60);
+    
+    h_bi214_length_alpha->Reset();
+    h_bi214_length_alpha->Add(h_bi214_source_bulk_length_alpha);
+    h_bi214_length_alpha->Add(h_bi214_source_surface_length_alpha);
+    h_bi214_length_alpha->Add(h_bi214_tracker_surface_length_alpha);
+    
+    h_bi214_length_alpha->GetXaxis()->SetTitle("alpha length [mm]");
+    h_bi214_length_alpha->GetYaxis()->SetTitle("Events/bin");
+    h_bi214_length_alpha->SetLineColor(kBlack);
+    
     c1->cd(4);
     h_bi214_length_alpha->Draw();
     h_bi214_source_bulk_length_alpha->Draw("same");
@@ -166,11 +165,8 @@ void do_exposure(Int_t days){
     
     c1->SaveAs("alpha_length.png");   
     system("display alpha_length.png"); 
-  }
-  
-  // One pseudo-experiment:
-  
-  if (do_plot){
+    
+    // One pseudo-experiment:
     
     do_fit(N_source_bulk,N_source_surface,N_tracker_surface);
     
@@ -237,12 +233,14 @@ void do_exposure(Int_t days){
 
   if (do_plot){
 
-    // print results
+    // print results only for good fits (0)
     std::cout << std::endl << "Fit results: " << std::endl;
-    if (bulk_fit==0) std::cout << "  Source bulk events: " << bulk->GetFunction("gaus")->GetParameter(1)*exposure*e_source_bulk << std::endl;
-    if (surface_fit==0) std::cout << "  Source surface events: " << surface->GetFunction("gaus")->GetParameter(1)*exposure*e_source_surface << std::endl; 
-    if (tracker_fit==0) std::cout << "  Tracker surface events: " << tracker->GetFunction("gaus")->GetParameter(1)*exposure*e_tracker_surface << std::endl;
-    
+    if (bulk_fit==0)    std::cout << "  Source bulk events: " << bulk->GetFunction("gaus")->GetParameter(1)*exposure*e_source_bulk << " ± "<< \
+			  bulk->GetFunction("gaus")->GetParameter(2)/sqrt(bulk->GetEntries())*exposure*e_source_bulk << std::endl;
+    if (surface_fit==0) std::cout << "  Source surface events: " << surface->GetFunction("gaus")->GetParameter(1)*exposure*e_source_surface << " ± "<< \
+			  surface->GetFunction("gaus")->GetParameter(2)/sqrt(surface->GetEntries())*exposure*e_source_surface << std::endl;
+    if (tracker_fit==0) std::cout << "  Tracker surface events: " << tracker->GetFunction("gaus")->GetParameter(1)*exposure*e_tracker_surface << " ± "<< \
+			  tracker->GetFunction("gaus")->GetParameter(2)/sqrt(tracker->GetEntries())*exposure*e_tracker_surface << std::endl;
     if (bulk_fit==0) std::cout << "  Source bulk error: " << bulk->GetFunction("gaus")->GetParameter(2)/bulk->GetFunction("gaus")->GetParameter(1)  << std::endl;
     if (surface_fit==0) std::cout << "  Source surface error: " << surface->GetFunction("gaus")->GetParameter(2)/surface->GetFunction("gaus")->GetParameter(1) << std::endl;
     if (tracker_fit==0) std::cout << "  Tracker surface error: " << tracker->GetFunction("gaus")->GetParameter(2)/tracker->GetFunction("gaus")->GetParameter(1) << std::endl;
@@ -267,9 +265,9 @@ void do_exposure(Int_t days){
 }
 
 void do_contribution(TFile *f, TH1F* h_length_alpha, Double_t &efficiency){
-
+  
   TTree *t = (TTree*)f->Get("Sensitivity");
-
+  
   // Variables:
 
   Double_t alpha_track_length;
@@ -286,23 +284,27 @@ void do_contribution(TFile *f, TH1F* h_length_alpha, Double_t &efficiency){
   
   h_length_alpha->GetXaxis()->SetTitle("alpha length [mm]");
   h_length_alpha->GetYaxis()->SetTitle("Events/bin");
-
+  
   // Read all entries and fill the histograms:
   Long64_t nentries = t->GetEntries();
   for (Long64_t i=0;i<nentries;i++) {
     t->GetEntry(i);
-
-    // Source selection:
-    //if ((alpha_track_length > 0) && (topology_1e1alpha == true) && (abs(first_vertex_x) < 0.125 && (abs(second_vertex_x) < 0.125)) && (vertices_on_foil==2))
-
-    // Tracker selection:
-    if ((alpha_track_length > 0) && (topology_1e1alpha == true) && (abs(first_vertex_x) > 0.125 && (abs(second_vertex_x) > 0.125)) && (vertices_on_foil==0))
-      h_length_alpha->Fill(alpha_track_length);
-  }
-  
+    
+    if (selection == "SOURCE")
+      // Source selection:
+      if ((alpha_track_length > 0) && (topology_1e1alpha == true) && (abs(first_vertex_x) < 0.125 && (abs(second_vertex_x) < 0.125)) && (vertices_on_foil==2))
+	h_length_alpha->Fill(alpha_track_length);
+    
+    if (selection == "TRACKER") 
+      // Tracker selection:
+      if ((alpha_track_length > 0) && (topology_1e1alpha == true) && (abs(first_vertex_x) > 0.125 && (abs(second_vertex_x) > 0.125)) && (vertices_on_foil==0))
+	h_length_alpha->Fill(alpha_track_length);
+    
+    
   // Selection efficiency:
   efficiency = h_length_alpha->GetEntries()/nentries;
   
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -320,11 +322,11 @@ int main(){
 
   // Filling histograms, calculate efficiency and create PDFs:
 
-  std::cout << "Fill histograms with SOURCE selections..." << std::endl;
+  std::cout << "Fill histograms with " << selection << " selections..." << std::endl << std::endl;
   do_contribution(f1, h_bi214_source_bulk_length_alpha, e_source_bulk);
   do_contribution(f2, h_bi214_source_surface_length_alpha, e_source_surface);
   do_contribution(f3, h_bi214_tracker_surface_length_alpha, e_tracker_surface);
-
+  
   std::cout << "Source bulk efficiency: " << e_source_bulk*100 << "%" << std::endl;
   std::cout << "Source surface efficiency: " << e_source_surface*100 << "%" << std::endl;
   std::cout << "Tracker surface efficiency: " << e_tracker_surface*100 << "%" << std::endl << std::endl;
@@ -341,11 +343,11 @@ int main(){
   c1->cd(3);
   h_bi214_tracker_surface_length_alpha->Draw();
 
-  //if (do_plot) do_exposure(1); // 1 days
-  //if (do_plot) do_exposure(7); // 7 days
-  //if (do_plot) do_exposure(14); // 14 days
-  //if (do_plot) do_exposure(30); // 30 days
-  //if (do_plot) do_exposure(60); // 60 days
+  if (do_plot) do_exposure(1); // 1 days
+  if (do_plot) do_exposure(7); // 7 days
+  if (do_plot) do_exposure(14); // 14 days
+  if (do_plot) do_exposure(30); // 30 days
+  if (do_plot) do_exposure(500); 
 
   // Multiple exposures:
 
@@ -419,6 +421,6 @@ int main(){
 
   
 }
-
+ 
 
 
