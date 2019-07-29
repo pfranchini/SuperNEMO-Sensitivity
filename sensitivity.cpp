@@ -1,13 +1,16 @@
-//###########################
+//###############################################
 //
 // Sensitivity studies
 //  - Bi214
 //
-//########################### 
+// P. Franchini - p.franchini@imperial.ac.uk
+//
+//###############################################
 
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TChain.h"
 #include "TH1F.h"
 #include "TF1.h"
 #include "TGraph.h"
@@ -23,7 +26,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////
 Bool_t do_plot = true;          // Creates example plots for one exposure
-Int_t N_experiments = 1000;    // Number of pseudo experiments for each exposure
+Int_t N_experiments = 10000;    // Number of pseudo experiments for each exposure
 TString selection = "SOURCE";  // Selection: [SOURCE, TRACKER]
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +46,7 @@ TH1F* h_bi214_source_surface_length_alpha = new TH1F("h_bi214_source_surface_len
 TH1F* h_bi214_tracker_surface_length_alpha = new TH1F("h_bi214_tracker_surface_length_alpha","Bi214 tracker: alpha length", 100, 0., 500.);
 TH1F* h_bi214_length_alpha = new TH1F("h_bi214_length_alpha","Bi214: alpha length", 100, 0., 500.);
 
-// Mock dataset
+// mock dataset
 TH1F* h_bi214_length_alpha_exp = new TH1F("h_bi214_length_alpha_exp","Bi214: alpha length - pseudo experiment", 100, 0., 500.);
 
 // pseudo-experiments results
@@ -95,7 +98,7 @@ void do_fit(Int_t N1, Int_t N2, Int_t N3){
   // Create new pseudo-experiment histogram:
   for ( Int_t bin = 0; bin < h_bi214_length_alpha->GetNbinsX(); bin++ )
     //    h_bi214_length_alpha_exp->SetBinContent(bin,h_bi214_length_alpha->GetBinContent(bin)/N_total*N);
-    h_bi214_length_alpha_exp->SetBinContent(bin,			\
+    h_bi214_length_alpha_exp->SetBinContent(bin, \
 					    h_bi214_source_bulk_length_alpha->GetBinContent(bin)/N_source_bulk*N_source_bulk_rand + \
 					    h_bi214_source_surface_length_alpha->GetBinContent(bin)/N_source_surface*N_source_surface_rand + \
 					    h_bi214_tracker_surface_length_alpha->GetBinContent(bin)/N_tracker_surface*N_tracker_surface_rand );
@@ -212,7 +215,8 @@ void do_exposure(Int_t days){
     if (do_plot) std::cout << "\b\b\b\b\b" << i;
     
     do_fit(N_source_bulk,N_source_surface,N_tracker_surface);
-    
+
+    //std::cout << "BULK: " << func->GetParameter(0)/exposure/e_source_bulk << std::endl;
     bulk->Fill(func->GetParameter(0)/exposure/e_source_bulk);
     surface->Fill(func->GetParameter(1)/exposure/e_source_surface);
     tracker->Fill(func->GetParameter(2)/exposure/e_tracker_surface);
@@ -264,9 +268,11 @@ void do_exposure(Int_t days){
 
 }
 
-void do_contribution(TFile *f, TH1F* h_length_alpha, Double_t &efficiency){
-  
-  TTree *t = (TTree*)f->Get("Sensitivity");
+//void do_contribution(TFile *f, TH1F* h_length_alpha, Double_t &efficiency){
+void do_contribution(TChain *t, TH1F* h_length_alpha, Double_t &efficiency){
+
+  std::cout << h_length_alpha->GetTitle() << " entries: " << t->GetEntries() << std::endl;
+  //  TTree *t = (TTree*)f->Get("Sensitivity");
   
   // Variables:
 
@@ -290,6 +296,7 @@ void do_contribution(TFile *f, TH1F* h_length_alpha, Double_t &efficiency){
   for (Long64_t i=0;i<nentries;i++) {
     t->GetEntry(i);
     
+    // Selections:
     if (selection == "SOURCE")
       // Source selection:
       if ((alpha_track_length > 0) && (topology_1e1alpha == true) && (abs(first_vertex_x) < 0.125 && (abs(second_vertex_x) < 0.125)) && (vertices_on_foil==2))
@@ -316,16 +323,22 @@ int main(){
   // Load MC:
 
   std::cout << "Loading MC from files..." << std::endl;
-  TFile *f1 = new TFile("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_source_bulk.root");  
-  TFile *f2 = new TFile("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_source_surface.root");  
-  TFile *f3 = new TFile("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_tracker_surface.root");  
+  TChain *d1 = new TChain("Sensitivity");
+  TChain *d2 = new TChain("Sensitivity");
+  TChain *d3 = new TChain("Sensitivity");
+
+  // can add multiple root files with *  
+  d1->Add("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_source_bulk.root");
+  //d1->Add("/home/hep/pfranchi/SuperNEMO/MC/Lyon/damned_sn_reco_5/file_?.root");
+  d2->Add("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_source_surface.root");
+  d3->Add("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_tracker_surface.root");
 
   // Filling histograms, calculate efficiency and create PDFs:
 
   std::cout << "Fill histograms with " << selection << " selections..." << std::endl << std::endl;
-  do_contribution(f1, h_bi214_source_bulk_length_alpha, e_source_bulk);
-  do_contribution(f2, h_bi214_source_surface_length_alpha, e_source_surface);
-  do_contribution(f3, h_bi214_tracker_surface_length_alpha, e_tracker_surface);
+  do_contribution(d1, h_bi214_source_bulk_length_alpha, e_source_bulk);
+  do_contribution(d2, h_bi214_source_surface_length_alpha, e_source_surface);
+  do_contribution(d3, h_bi214_tracker_surface_length_alpha, e_tracker_surface);
   
   std::cout << "Source bulk efficiency: " << e_source_bulk*100 << "%" << std::endl;
   std::cout << "Source surface efficiency: " << e_source_surface*100 << "%" << std::endl;
