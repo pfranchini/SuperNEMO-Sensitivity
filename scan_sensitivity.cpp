@@ -25,7 +25,7 @@
 #include <iostream>
 
 //////////////////////////////////////////////////////////////////////////////////////////
-Int_t N_experiments = 10000;      // Number of pseudo experiments for each exposure
+Int_t N_experiments = 1000;      // Number of pseudo experiments for each exposure
 TString selection = "SOURCE";   // Selection: [SOURCE, TRACKER]
 Int_t nbinsx = 20;              // Scan resolution in X
 Int_t nbinsy = 20;              // Scan resolution in Y
@@ -119,7 +119,7 @@ void do_exposure(Int_t days){
 
   // pseudo-experiments results
   
-  TH1F* bulk    = new TH1F("bulk","Source bulk", 100, source_bulk_activity-0.1*(source_bulk_activity), source_bulk_activity+0.1*(source_bulk_activity));
+  TH1F* bulk    = new TH1F("bulk","Source bulk", 100, source_bulk_activity-0.4*(source_bulk_activity), source_bulk_activity+0.4*(source_bulk_activity));
   //TH1F* surface = new TH1F("surface","Source surface", 100, source_surface_activity-0.1*(source_surface_activity), source_surface_activity+0.1*(source_surface_activity));
   //TH1F* tracker = new TH1F("tracker","Tracker surface", 100, tracker_surface_activity-0.1*(tracker_surface_activity), tracker_surface_activity+0.1*(tracker_surface_activity));
 
@@ -147,7 +147,7 @@ void do_exposure(Int_t days){
     
   }
 
-  Int_t bulk_fit = bulk->Fit("gaus","q");
+  Int_t bulk_fit = bulk->Fit("gaus","wq");
   //  Int_t surface_fit = surface->Fit("gaus","q");
   //  Int_t tracker_fit = tracker->Fit("gaus","q");
 
@@ -166,6 +166,12 @@ void do_exposure(Int_t days){
       bulk_scan->Fill(source_bulk_activity*1e3, days, bulk->GetFunction("gaus")->GetParameter(2)/bulk->GetFunction("gaus")->GetParameter(1)*100);
     }
   }
+
+  TFile *output = new TFile("bulk_scan_fits.root","UPDATE");
+  output->cd();
+  bulk->Write();
+  output->Close();
+  delete output;
 
   delete bulk;
   //delete surface;
@@ -263,6 +269,10 @@ int main(){
   //gPad->SetLogx();
   //gPad->SetLogy();
 
+  TFile *output = new TFile("bulk_scan_fits.root","RECREATE");
+  output->Close();
+  delete output;
+
   // Multiple activities for the bulk (keep the other fixed)
   for ( source_bulk_activity=1e-04; source_bulk_activity<=10e-03; source_bulk_activity+=10e-03/bulk_scan->GetNbinsX() ) {
 
@@ -275,12 +285,14 @@ int main(){
   
   bulk_scan->Draw("colz");
   c1->SaveAs("bulk_scan.png");
+  c1->SaveAs("bulk_scan.pdf");
   system("pkill display");
   system("display bulk_scan.png &");
 
-  TFile *output = new TFile("bulk_scan.root","RECREATE");
-  output->cd();
+  TFile *output1 = new TFile("bulk_scan.root","UPDATE");
+  output1->cd();
   bulk_scan->Write();
+  output1->Close();
   
 }
  

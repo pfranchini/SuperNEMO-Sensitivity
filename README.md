@@ -3,6 +3,9 @@ SuperNEMO background and 0nbb sensitivity analysis
 
 Paolo Franchini (Imperial College London) - p.franchini@imperial.ac.uk
 
+## Requirements:
+
+* ROOT installed and sourced (${ROOTSYS})
 
 ## Files: 
 

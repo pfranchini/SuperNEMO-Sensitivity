@@ -1,11 +1,11 @@
 // List of constants to be included for the SuperNEMO demonstrator
+// as in https://nemo.lpc-caen.in2p3.fr/wiki/NEMO/SuperNEMO/Analysis/Baselines
 
 // Used:
 
-const Double_t source_bulk_activity = 15.4e-03; // Bq for the total foil bulk
-//const Double_t source_surface_activity = 0.18e-03; // Bq for the total foil surface
-const Double_t source_surface_activity = 3.37e-03; // Bq for the total foil surface
-const Double_t tracker_surface_activity = 45.5e-03; // Bq for the total tracker surface
+const Double_t source_bulk_activity = 4.94e-03; // Bq for the total foil bulk (source_pads_internal_bulk)
+const Double_t source_surface_activity = 3.2214e-03; // Bq for the total foil surface (no flushing)
+const Double_t tracker_surface_activity = 38.0786e-03; // Bq for the total tracker surface (no flushing)
 
 
 // Unsed (so far):

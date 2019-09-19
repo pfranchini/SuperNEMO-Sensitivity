@@ -25,9 +25,10 @@
 #include "constants.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
-Bool_t do_plot = true;          // Creates example plots for one exposure
+Bool_t do_plot = false;          // Creates example plots for one exposure
 Int_t N_experiments = 10000;    // Number of pseudo experiments for each exposure
-TString selection = "SOURCE";  // Selection: [SOURCE, TRACKER]
+TString selection = "SOURCE";   // Selection: [SOURCE, TRACKER]
+Int_t step=100;                 // Steps for the exposure [day]
 //////////////////////////////////////////////////////////////////////////////////////////
 
 Double_t N_source_bulk, N_source_surface, N_tracker_surface, N_total;
@@ -48,11 +49,6 @@ TH1F* h_bi214_length_alpha = new TH1F("h_bi214_length_alpha","Bi214: alpha lengt
 
 // mock dataset
 TH1F* h_bi214_length_alpha_exp = new TH1F("h_bi214_length_alpha_exp","Bi214: alpha length - pseudo experiment", 100, 0., 500.);
-
-// pseudo-experiments results
-TH1F* bulk    = new TH1F("bulk","Source bulk", 100, source_bulk_activity-0.1*(source_bulk_activity), source_bulk_activity+0.1*(source_bulk_activity));
-TH1F* surface = new TH1F("surface","Source surface", 100, source_surface_activity-0.1*(source_surface_activity), source_surface_activity+0.1*(source_surface_activity));
-TH1F* tracker = new TH1F("tracker","Tracker surface", 100, tracker_surface_activity-0.1*(tracker_surface_activity), tracker_surface_activity+0.1*(tracker_surface_activity));
 
 TRandom3 *rand1 = new TRandom3();
 TRandom3 *rand2 = new TRandom3();
@@ -78,8 +74,8 @@ Double_t fitfunc(Double_t *x, Double_t *par){
   Double_t tracker_surface = h_bi214_tracker_surface_length_alpha->GetBinContent(bin3);
   
   Double_t total = par[0]/h_bi214_source_bulk_length_alpha->Integral()*source_bulk+ \
-    par[1]/h_bi214_source_surface_length_alpha->Integral()*source_surface+ \
-    par[2]/h_bi214_tracker_surface_length_alpha->Integral()*tracker_surface;
+                   par[1]/h_bi214_source_surface_length_alpha->Integral()*source_surface+ \
+                   par[2]/h_bi214_tracker_surface_length_alpha->Integral()*tracker_surface;
 
   return total;
 
@@ -87,12 +83,12 @@ Double_t fitfunc(Double_t *x, Double_t *par){
 
 TF1 *func = new TF1("func",fitfunc,0,500,3);
 
-void do_fit(Int_t N1, Int_t N2, Int_t N3){
+void do_fit(){
 
   // Randomize single contributions
-  Double_t N_source_bulk_rand = rand1->TRandom3::Poisson(N_source_bulk);
-  Double_t N_source_surface_rand = rand2->TRandom3::Poisson(N_source_surface);
-  Double_t N_tracker_surface_rand = rand3->TRandom3::Poisson(N_tracker_surface);
+  Double_t N_source_bulk_rand = rand1->TRandom3::PoissonD(N_source_bulk);
+  Double_t N_source_surface_rand = rand2->TRandom3::PoissonD(N_source_surface);
+  Double_t N_tracker_surface_rand = rand3->TRandom3::PoissonD(N_tracker_surface);
   //std::cout << "Experiment randomized event number: " << N_source_bulk_rand+N_source_surface_rand+N_tracker_surface_rand << std::endl;
   
   // Create new pseudo-experiment histogram:
@@ -115,9 +111,19 @@ void do_exposure(Int_t days){
 
   std::cout << std::endl << "Exposure: " << days << " day(s)"  << std::endl;
 
-  bulk->Reset();
-  surface->Reset();
-  tracker->Reset();
+  // pseudo-experiments results
+  
+  //TH1F* bulk    = new TH1F("bulk","Source bulk", 100, source_bulk_activity-0.1*(source_bulk_activity), source_bulk_activity+0.1*(source_bulk_activity));
+  //TH1F* surface = new TH1F("surface","Source surface", 100, source_surface_activity-0.1*(source_surface_activity), source_surface_activity+0.1*(source_surface_activity));
+  //TH1F* tracker = new TH1F("tracker","Tracker surface", 100, tracker_surface_activity-0.1*(tracker_surface_activity), tracker_surface_activity+0.1*(tracker_surface_activity));
+
+  TH1F* bulk    = new TH1F("bulk","Source bulk", 100, source_bulk_activity-0.1*(source_bulk_activity), source_bulk_activity+0.1*(source_bulk_activity));
+  TH1F* surface = new TH1F("surface","Source surface", 100, source_surface_activity-0.1*(source_surface_activity), source_surface_activity+0.1*(source_surface_activity));
+  TH1F* tracker = new TH1F("tracker","Tracker surface", 100, tracker_surface_activity-0.1*(tracker_surface_activity), tracker_surface_activity+0.1*(tracker_surface_activity));
+
+  //bulk->Reset();
+  //surface->Reset();
+  //tracker->Reset();
 
   // Normalization based on exposure:
   Double_t exposure = days*24*60*60; // exposure in seconds
@@ -127,15 +133,15 @@ void do_exposure(Int_t days){
   N_tracker_surface = e_tracker_surface*tracker_surface_activity*exposure;
   N_total = N_source_bulk+N_source_surface+N_tracker_surface;
 
+  h_bi214_source_bulk_length_alpha->Scale(N_source_bulk/h_bi214_source_bulk_length_alpha->Integral());
+  h_bi214_source_surface_length_alpha->Scale(N_source_surface/h_bi214_source_surface_length_alpha->Integral());
+  h_bi214_tracker_surface_length_alpha->Scale(N_tracker_surface/h_bi214_tracker_surface_length_alpha->Integral());
+  
   if (do_plot){
     std::cout << "Events source bulk: " << N_source_bulk << std::endl;
     std::cout << "Events source surface: " << N_source_surface << std::endl;
     std::cout << "Events tracker surface: " << N_tracker_surface << std::endl;
     std::cout << "  Total number of events: " << N_total << std::endl << std::endl;
-    
-    h_bi214_source_bulk_length_alpha->Scale(N_source_bulk/h_bi214_source_bulk_length_alpha->Integral());
-    h_bi214_source_surface_length_alpha->Scale(N_source_surface/h_bi214_source_surface_length_alpha->Integral());
-    h_bi214_tracker_surface_length_alpha->Scale(N_tracker_surface/h_bi214_tracker_surface_length_alpha->Integral());
     
     h_bi214_source_bulk_length_alpha->SetLineColor(kRed);
     h_bi214_source_surface_length_alpha->SetLineColor(kGreen+3);
@@ -171,7 +177,7 @@ void do_exposure(Int_t days){
     
     // One pseudo-experiment:
     
-    do_fit(N_source_bulk,N_source_surface,N_tracker_surface);
+    do_fit();
     
     // Plot contributions:
     
@@ -214,9 +220,8 @@ void do_exposure(Int_t days){
     
     if (do_plot) std::cout << "\b\b\b\b\b" << i;
     
-    do_fit(N_source_bulk,N_source_surface,N_tracker_surface);
+    do_fit();
 
-    //std::cout << "BULK: " << func->GetParameter(0)/exposure/e_source_bulk << std::endl;
     bulk->Fill(func->GetParameter(0)/exposure/e_source_bulk);
     surface->Fill(func->GetParameter(1)/exposure/e_source_surface);
     tracker->Fill(func->GetParameter(2)/exposure/e_tracker_surface);
@@ -266,9 +271,12 @@ void do_exposure(Int_t days){
 
   }
 
+  delete bulk;
+  delete surface;
+  delete tracker;
+
 }
 
-//void do_contribution(TFile *f, TH1F* h_length_alpha, Double_t &efficiency){
 void do_contribution(TChain *t, TH1F* h_length_alpha, Double_t &efficiency){
 
   std::cout << h_length_alpha->GetTitle() << " entries: " << t->GetEntries() << std::endl;
@@ -328,7 +336,7 @@ int main(){
   TChain *d3 = new TChain("Sensitivity");
 
   // can add multiple root files with *  
-  d1->Add("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_source_bulk.root");
+  d1->Add("/home/hep/pfranchi/SuperNEMO/MC/20190916-1323/bi214_source_internal_bulk.root");
   //d1->Add("/home/hep/pfranchi/SuperNEMO/MC/Lyon/damned_sn_reco_5/file_?.root");
   d2->Add("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_source_surface.root");
   d3->Add("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_tracker_surface.root");
@@ -356,11 +364,11 @@ int main(){
   c1->cd(3);
   h_bi214_tracker_surface_length_alpha->Draw();
 
-  if (do_plot) do_exposure(1); // 1 days
+  if (do_plot) do_exposure(1); // 1 day
   if (do_plot) do_exposure(7); // 7 days
   if (do_plot) do_exposure(14); // 14 days
   if (do_plot) do_exposure(30); // 30 days
-  if (do_plot) do_exposure(500); 
+  if (do_plot) do_exposure(500); // 500 days
 
   // Multiple exposures:
 
@@ -372,7 +380,7 @@ int main(){
     do_exposure(30); // 30 days
     do_exposure(60); // 60 days
     
-    for (Long64_t i=2;i<1010;i+=10) 
+    for (Long64_t i=2; i<1010; i+=step) 
       do_exposure(i);
       
   }

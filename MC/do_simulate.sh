@@ -33,6 +33,8 @@ WHERE=$PWD/`date "+%Y%m%d-%H%M"`
 mkdir -p $WHERE
 rm -f $WHERE/$CONFIGURATION.log
 
+snemo-sing flsimulate --version >> $WHERE/$CONFIGURATION.log
+
 # Create Sensitivity conf with the proper filename
 cp ${SENSITIVITY}/SensitivityModuleExample.conf $WHERE/$CONFIGURATION-sensitivity.conf
 echo "filename_out : string[1] = \"$WHERE/$CONFIGURATION.root\"" >> $WHERE/$CONFIGURATION-sensitivity.conf
@@ -42,6 +44,7 @@ echo "Working in: " $WHERE
 
 echo "Simulation..."
 snemo-sing flsimulate -c $PWD/$CONFIGURATION.conf -o $WHERE/$CONFIGURATION-sim.brio &>> $WHERE/$CONFIGURATION.log
+echo "snemo-sing flsimulate -c $PWD/$CONFIGURATION.conf -o $WHERE/$CONFIGURATION-sim.brio"
 
 if [ ! -f "$WHERE/$CONFIGURATION-sim.brio" ]; then
     echo "Simulation not present, something wrong with flsimulate!!!"
