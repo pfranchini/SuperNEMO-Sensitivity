@@ -25,10 +25,10 @@
 #include "constants.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
-Bool_t do_plot = false;          // Creates example plots for one exposure
+Bool_t do_plot = false;         // Creates example plots for one exposure
 Int_t N_experiments = 10000;    // Number of pseudo experiments for each exposure
 TString selection = "SOURCE";   // Selection: [SOURCE, TRACKER]
-Int_t step=100;                 // Steps for the exposure [day]
+Int_t step=10;                  // Steps for the exposure [day]
 //////////////////////////////////////////////////////////////////////////////////////////
 
 Double_t N_source_bulk, N_source_surface, N_tracker_surface, N_total;
@@ -93,7 +93,7 @@ void do_fit(){
   
   // Create new pseudo-experiment histogram:
   for ( Int_t bin = 0; bin < h_bi214_length_alpha->GetNbinsX(); bin++ )
-    //    h_bi214_length_alpha_exp->SetBinContent(bin,h_bi214_length_alpha->GetBinContent(bin)/N_total*N);
+    //h_bi214_length_alpha_exp->SetBinContent(bin,h_bi214_length_alpha->GetBinContent(bin)/N_total*N);
     h_bi214_length_alpha_exp->SetBinContent(bin, \
 					    h_bi214_source_bulk_length_alpha->GetBinContent(bin)/N_source_bulk*N_source_bulk_rand + \
 					    h_bi214_source_surface_length_alpha->GetBinContent(bin)/N_source_surface*N_source_surface_rand + \
@@ -102,7 +102,7 @@ void do_fit(){
   
   // Fit:
   func->SetParameters(N_source_bulk,N_source_surface,N_tracker_surface);
-  h_bi214_length_alpha_exp->Fit("func","q"); // "q" quite option
+  h_bi214_length_alpha_exp->Fit("func", "q"); // "q" quite option
   
 }
 
@@ -117,9 +117,9 @@ void do_exposure(Int_t days){
   //TH1F* surface = new TH1F("surface","Source surface", 100, source_surface_activity-0.1*(source_surface_activity), source_surface_activity+0.1*(source_surface_activity));
   //TH1F* tracker = new TH1F("tracker","Tracker surface", 100, tracker_surface_activity-0.1*(tracker_surface_activity), tracker_surface_activity+0.1*(tracker_surface_activity));
 
-  TH1F* bulk    = new TH1F("bulk","Source bulk", 100, source_bulk_activity-0.1*(source_bulk_activity), source_bulk_activity+0.1*(source_bulk_activity));
-  TH1F* surface = new TH1F("surface","Source surface", 100, source_surface_activity-0.1*(source_surface_activity), source_surface_activity+0.1*(source_surface_activity));
-  TH1F* tracker = new TH1F("tracker","Tracker surface", 100, tracker_surface_activity-0.1*(tracker_surface_activity), tracker_surface_activity+0.1*(tracker_surface_activity));
+  TH1F* bulk    = new TH1F("bulk","Source bulk", 100, source_bulk_activity-0.4*(source_bulk_activity), source_bulk_activity+0.4*(source_bulk_activity));
+  TH1F* surface = new TH1F("surface","Source surface", 100, source_surface_activity-0.4*(source_surface_activity), source_surface_activity+0.4*(source_surface_activity));
+  TH1F* tracker = new TH1F("tracker","Tracker surface", 100, tracker_surface_activity-0.4*(tracker_surface_activity), tracker_surface_activity+0.4*(tracker_surface_activity));
 
   //bulk->Reset();
   //surface->Reset();
@@ -228,9 +228,9 @@ void do_exposure(Int_t days){
     
   }
 
-  Int_t bulk_fit = bulk->Fit("gaus","q");
-  Int_t surface_fit = surface->Fit("gaus","q");
-  Int_t tracker_fit = tracker->Fit("gaus","q");
+  Int_t bulk_fit = bulk->Fit("gaus","wq");
+  Int_t surface_fit = surface->Fit("gaus","wq");
+  Int_t tracker_fit = tracker->Fit("gaus","wq");
 
   // Fill TGraphs for each contribution
   if (bulk_fit==0) bulk_events->SetPoint(bulk_events->GetN()+1,days, bulk->GetFunction("gaus")->GetParameter(1)*exposure*e_source_bulk);
@@ -336,10 +336,11 @@ int main(){
   TChain *d3 = new TChain("Sensitivity");
 
   // can add multiple root files with *  
-  d1->Add("/home/hep/pfranchi/SuperNEMO/MC/20190916-1323/bi214_source_internal_bulk.root");
+  // Falaise 4.0.0
+  d1->Add("/home/hep/pfranchi/SuperNEMO/MC/20191004-1238/bi214_source_internal_bulk.root");
   //d1->Add("/home/hep/pfranchi/SuperNEMO/MC/Lyon/damned_sn_reco_5/file_?.root");
-  d2->Add("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_source_surface.root");
-  d3->Add("/home/hep/pfranchi/SuperNEMO/MC/20190718-1402/bi214_tracker_surface.root");
+  d2->Add("/home/hep/pfranchi/SuperNEMO/MC/20191004-1238/bi214_source_surface.root");
+  d3->Add("/home/hep/pfranchi/SuperNEMO/MC/20191004-1238/bi214_tracker_surface.root");
 
   // Filling histograms, calculate efficiency and create PDFs:
 
@@ -364,11 +365,12 @@ int main(){
   c1->cd(3);
   h_bi214_tracker_surface_length_alpha->Draw();
 
-  if (do_plot) do_exposure(1); // 1 day
-  if (do_plot) do_exposure(7); // 7 days
-  if (do_plot) do_exposure(14); // 14 days
-  if (do_plot) do_exposure(30); // 30 days
-  if (do_plot) do_exposure(500); // 500 days
+  //if (do_plot) do_exposure(1); // 1 day
+  //if (do_plot) do_exposure(7); // 7 days
+  //if (do_plot) do_exposure(14); // 14 days
+  //if (do_plot) do_exposure(30); // 30 days
+  if (do_plot) do_exposure(60); // 60 days
+  //if (do_plot) do_exposure(500); // 500 days
 
   // Multiple exposures:
 
@@ -388,31 +390,37 @@ int main(){
   // Plot results:
 
   bulk_events->SetTitle("Number of events evolution");
+  bulk_events->SetName("bulk_events");
   bulk_events->GetXaxis()->SetTitle("Exposure [days]");
   bulk_events->GetYaxis()->SetTitle("Number of expected events");
   bulk_events->SetMarkerStyle(20);
   bulk_events->SetMarkerColor(kRed);
 
   surface_events->SetTitle("Number of events evolution");
+  surface_events->SetName("surface_events");
   surface_events->GetXaxis()->SetTitle("Exposure [days]");
   surface_events->GetYaxis()->SetTitle("Number of expected events");
   surface_events->SetMarkerStyle(20);
   surface_events->SetMarkerColor(kGreen+3);
 
   tracker_events->SetTitle("Number of events evolution");
+  tracker_events->SetName("tracker_events");
   tracker_events->GetXaxis()->SetTitle("Exposure [days]");
   tracker_events->GetYaxis()->SetTitle("Number of expected events");
   tracker_events->SetMarkerStyle(20);
   tracker_events->SetMarkerColor(kBlue);
 
   bulk_errors->SetTitle("Relative errors evolution");
+  bulk_errors->SetName("bulk_errors");
   bulk_errors->GetXaxis()->SetTitle("Exposure [days]");
   bulk_errors->GetYaxis()->SetTitle("Relative error [%]");
   bulk_errors->SetMarkerStyle(20);
   bulk_errors->SetMarkerColor(kRed);
 
+  surface_errors->SetName("surface_errors");
   surface_errors->SetMarkerStyle(20);
   surface_errors->SetMarkerColor(kGreen+3);
+  tracker_errors->SetName("tracker_errors");
   tracker_errors->SetMarkerStyle(20);
   tracker_errors->SetMarkerColor(kBlue);
 
@@ -437,8 +445,21 @@ int main(){
   gPad->Modified(); gPad->Update();
 
   c4->SaveAs("exposures.png");   
+  c4->SaveAs("exposures.pdf");   
   system("display exposures.png &"); 
 
+  // Save some results on a root file
+  TFile *output1 = new TFile("sensitivity.root","RECREATE");
+  output1->cd();
+
+  bulk_events->Write();
+  surface_events->Write();
+  tracker_events->Write();
+  bulk_errors->Write();
+  surface_errors->Write();
+  tracker_errors->Write();
+
+  output1->Close();
 
   
 }

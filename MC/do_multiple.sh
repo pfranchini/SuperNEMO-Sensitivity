@@ -28,7 +28,7 @@ rm -f ${CONFIGURATION}-seed*.conf
 
 # Falaise from Singularity
 shopt -s expand_aliases
-alias snemo-sing='singularity exec --home /home/hep/pfranchi --bind /vols/snemo/ -C /vols/build/snemo/falaise/falaise_latest.sif'
+alias snemo-sing='singularity exec --home /home/hep/pfranchi --bind /vols/snemo/ -c /vols/build/snemo/falaise/falaise_latest.sif'
 
 # Check if the configuration files exists
 if [ ! -f "${CONFIGURATION}.conf" ]; then

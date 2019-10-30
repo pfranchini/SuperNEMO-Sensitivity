@@ -20,7 +20,7 @@ SENSITIVITY="$HOME/SuperNEMO/SensitivityModuleBuild"
 ###############################
 
 shopt -s expand_aliases
-alias snemo-sing='singularity exec --home /home/hep/pfranchi --bind /vols/snemo/ -C /vols/build/snemo/falaise/falaise_latest.sif'
+alias snemo-sing='singularity exec --home /home/hep/pfranchi --bind /vols/snemo/ -c /vols/build/snemo/falaise/falaise_latest.sif'
 
 CONFIGURATION=${1}
 if [ ! -f "${CONFIGURATION}.conf" ]; then

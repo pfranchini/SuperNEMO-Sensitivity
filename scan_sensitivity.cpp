@@ -25,10 +25,10 @@
 #include <iostream>
 
 //////////////////////////////////////////////////////////////////////////////////////////
-Int_t N_experiments = 1000;      // Number of pseudo experiments for each exposure
+Int_t N_experiments = 10000;      // Number of pseudo experiments for each exposure
 TString selection = "SOURCE";   // Selection: [SOURCE, TRACKER]
-Int_t nbinsx = 20;              // Scan resolution in X
-Int_t nbinsy = 20;              // Scan resolution in Y
+Int_t nbinsx = 40;              // Scan resolution in X
+Int_t nbinsy = 40;              // Scan resolution in Y
 //////////////////////////////////////////////////////////////////////////////////////////
 
 Double_t N_source_bulk, N_source_surface, N_tracker_surface, N_total;
@@ -162,7 +162,7 @@ void do_exposure(Int_t days){
   // Fill activity | time | error
   if (bulk_fit==0) {
     std::cout << source_bulk_activity*1e3 << "  " << days << "  " << bulk->GetFunction("gaus")->GetParameter(2)/bulk->GetFunction("gaus")->GetParameter(1)*100 << std::endl;
-    if (( bulk->GetFunction("gaus")->GetParameter(1) >0 ) && ( bulk->GetFunction("gaus")->GetParameter(2)/bulk->GetFunction("gaus")->GetParameter(1)*100 < 20 )) {
+    if (( bulk->GetFunction("gaus")->GetParameter(1) >0 ) && ( bulk->GetFunction("gaus")->GetParameter(2)/bulk->GetFunction("gaus")->GetParameter(1)*100 < 100 )) {
       bulk_scan->Fill(source_bulk_activity*1e3, days, bulk->GetFunction("gaus")->GetParameter(2)/bulk->GetFunction("gaus")->GetParameter(1)*100);
     }
   }
@@ -274,7 +274,7 @@ int main(){
   delete output;
 
   // Multiple activities for the bulk (keep the other fixed)
-  for ( source_bulk_activity=1e-04; source_bulk_activity<=10e-03; source_bulk_activity+=10e-03/bulk_scan->GetNbinsX() ) {
+  for ( source_bulk_activity=10e-03/bulk_scan->GetNbinsX()/2; source_bulk_activity<=10e-03; source_bulk_activity+=10e-03/bulk_scan->GetNbinsX() ) {
 
     std::cout << std::endl << "Bulk activity: " << source_bulk_activity  << std::endl;
     

@@ -3,10 +3,11 @@ Produces simulations
 
  - do_simulate.sh <configuration>: single interactive simulation
  - do_multiple.sh <configuration> <number_of_bunches>: multiple batch simulations
- - do_simulate_multiple.sh <configuration1> <configuration2> ... <configurationN>: multiple interactive simulations
+ - do_simulate_multiple.sh "<configuration1> <configuration2> ... <configurationN>": multiple interactive simulations
+ - do_simulate.sh <reconstructed_file>: run Sensitivity module on a reconstructed brio file (e.g. produced in CC-Lyon)
 
 Examples:
 --------
 ./do_simulate.sh bi214_source_surface
 ./do_multiple.sh bi214_source_surface 100
-./do_simulate_multiple.sh bi214_source_surface bi214_source_bulk.conf
+./do_simulate_multiple.sh "bi214_source_surface bi214_source_bulk.conf"
