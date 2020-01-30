@@ -20,7 +20,7 @@
 PURGE=false                                                                     # delete sim and reco files to save space
 SENSITIVITY="$HOME/SuperNEMO/SensitivityModuleBuild"                            # location of the SensitivityModule
 RECO_CONFIG="@falaise:snemo/demonstrator/reconstruction/official-2.0.0.conf"    # reconstruction config file
-FALAISE="/vols/build/snemo/Falaise.build/bin/"                                  # Falaise software
+FALAISE="/vols/build/snemo/Falaise.fork.build/bin/"                             # Falaise software
 #FALAISE="singularity exec --home /home/hep/pfranchi --bind /vols/snemo/ -c /vols/build/snemo/falaise/falaise_latest.sif "
 
 ##############################################################################
@@ -53,7 +53,7 @@ ${FALAISE}flsimulate -c $PWD/$CONFIGURATION.conf -o $WHERE/$CONFIGURATION-sim.br
 #echo "${FALAISE}flsimulate -c $PWD/$CONFIGURATION.conf -o $WHERE/$CONFIGURATION-sim.brio"
 
 if [ ! -f "$WHERE/$CONFIGURATION-sim.brio" ]; then
-    echo -e "Simulation not present, something wrong with flsimulate!!!\n"
+    echo -e "Simulation file not present, something wrong with flsimulate!!!\n"
     tail -n +12 $WHERE/$CONFIGURATION.log
     exit
 fi
@@ -66,7 +66,7 @@ if [ "$PURGE" = true ] ; then
 fi
 
 if [ ! -f "$WHERE/$CONFIGURATION-reco.brio" ]; then
-    echo "Reconstruction not present, something wrong with flreconstruct!!!"
+    echo "Reconstruction file not present, something wrong with flreconstruct!!!"
     exit
 fi
 
