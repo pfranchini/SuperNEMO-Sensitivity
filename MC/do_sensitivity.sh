@@ -2,17 +2,17 @@
 
 # Run the sensitivity module on a reconstructed brio file
 #
-# Usage: ./do_simulate.sh <reconstructed_file> (omitt .brio extension)
+# Usage: ./do_simulate.sh <reconstructed_file> (omit .brio extension)
 # Output: <reconstructed_file>.root
 
-###############################
+#######################################################################
 
 #SENSITIVITY="$HOME/SuperNEMO/SensitivityModuleBuild"
 SENSITIVITY="$HOME/SuperNEMO/SensitivityModule.fork.build"
 #FALAISE="/vols/build/snemo/Falaise.build/bin/"  
 FALAISE="singularity exec --home /home/hep/pfranchi --bind /vols/snemo/ -c /vols/build/snemo/falaise/falaise_latest.sif "   
 
-###############################
+#######################################################################
 
 FILE=${1}
 WHERE=$PWD
@@ -25,7 +25,7 @@ if [ ! -f "${FILE}.brio" ]; then
     exit
 fi
 
-# Remove eventual existing output file from the Sensitivity module
+# Remove eventual existing output file from a previous Sensitivity module run
 rm -f $WHERE/$FILE.root
 
 # Create the local directory

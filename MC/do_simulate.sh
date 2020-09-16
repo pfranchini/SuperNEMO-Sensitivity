@@ -20,8 +20,8 @@
 PURGE=false                                                                     # delete sim and reco files to save space
 SENSITIVITY="$HOME/SuperNEMO/SensitivityModuleBuild"                            # location of the SensitivityModule
 RECO_CONFIG="@falaise:snemo/demonstrator/reconstruction/official-2.0.0.conf"    # reconstruction config file
-FALAISE="/vols/build/snemo/Falaise.fork.build/bin/"                             # Falaise software
-#FALAISE="singularity exec --home /home/hep/pfranchi --bind /vols/snemo/ -c /vols/build/snemo/falaise/falaise_latest.sif "
+#FALAISE="/vols/build/snemo/Falaise.fork.build/bin/"                             # Falaise software
+FALAISE="singularity exec --home /home/hep/pfranchi --bind /vols/snemo/ -c /vols/build/snemo/falaise/falaise_latest.sif "
 
 ##############################################################################
 
@@ -40,6 +40,8 @@ mkdir -p $WHERE
 rm -f $WHERE/$CONFIGURATION.log
 
 ${FALAISE}flsimulate --version >> $WHERE/$CONFIGURATION.log
+echo "${CONFIGURATION}.conf" >> $WHERE/$CONFIGURATION.log
+cat ${CONFIGURATION}.conf >> $WHERE/$CONFIGURATION.log
 
 # Create Sensitivity conf with the proper filename
 cp ${SENSITIVITY}/SensitivityModuleExample.conf $WHERE/$CONFIGURATION-sensitivity.conf
